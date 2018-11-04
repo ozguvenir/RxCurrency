@@ -40,12 +40,26 @@ public class RxConverterAdapter extends RecyclerView.Adapter<RxConverterAdapter.
         RxCurrency currency = rxCurrencyList.get(position);
         if (currency != null) {
             holder.bindTo(currency);
+            holder.itemView.setOnClickListener(v -> swapSelectedItemToTop(position));
+            holder.editValue.setOnFocusChangeListener((v, hasFocus) -> focusValue());
         }
     }
 
     @Override
     public int getItemCount() {
         return rxCurrencyList.size();
+    }
+
+    private void swapSelectedItemToTop(int position) {
+        if (rxCurrencyList != null && rxCurrencyList.size() > 0) {
+            rxCurrencyList.add(0, rxCurrencyList.remove(position));
+            notifyItemMoved(position, 0);
+            notifyDataSetChanged();
+        }
+    }
+
+    private void focusValue() {
+
     }
 
     static class RxCurrencyViewHolder extends RecyclerView.ViewHolder {
