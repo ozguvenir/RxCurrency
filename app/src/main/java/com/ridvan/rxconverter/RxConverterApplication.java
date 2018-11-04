@@ -2,6 +2,7 @@ package com.ridvan.rxconverter;
 
 import android.app.Application;
 
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.ridvan.rxconverter.util.RxConverterConstants;
 
 import java.util.concurrent.TimeUnit;
@@ -35,6 +36,7 @@ public class RxConverterApplication extends Application {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(RxConverterConstants.REVOLUT_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(client)
                 .build();
 
