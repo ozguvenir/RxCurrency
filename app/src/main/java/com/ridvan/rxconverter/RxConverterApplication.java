@@ -2,6 +2,8 @@ package com.ridvan.rxconverter;
 
 import android.app.Application;
 
+import com.ridvan.rxconverter.util.RxConverterConstants;
+
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;

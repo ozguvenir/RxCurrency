@@ -1,4 +1,4 @@
-package com.ridvan.rxconverter;
+package com.ridvan.rxconverter.util;
 
 /**
  * Created by ridvanozguvenir on 4.11.2018.
