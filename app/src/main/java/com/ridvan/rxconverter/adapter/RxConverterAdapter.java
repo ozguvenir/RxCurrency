@@ -36,18 +36,23 @@ public class RxConverterAdapter extends RecyclerView.Adapter<RxConverterAdapter.
         rxCurrencyList = new ArrayList<>();
     }
 
-    public void creatOrUpdateCurrencyList(RxConverterResponse response) {
+    public void createOrUpdateCurrencyList(RxConverterResponse response) {
         if (response != null) {
-            response.getRates().put(response.getBase(), baseCurrencyValue);
             if (rxCurrencyList.size() > 0) {
                 this.updateCurrencyList(response.getRates());
             } else {
-                rxCurrencyList.clear();
-                for (Map.Entry<String, Double> current : response.getRates().entrySet()) {
-                    if (RxConverterConstants.DEFAULT_CURRENCY.equals(current.getKey()))
-                        rxCurrencyList.add(0, new RxCurrency(current.getKey(), current.getValue()));
-                    rxCurrencyList.add(new RxCurrency(current.getKey(), current.getValue()));
-                }
+                this.createCurrencyList(response);
+            }
+        }
+    }
+
+    public void createCurrencyList(RxConverterResponse response) {
+        response.getRates().put(response.getBase(), baseCurrencyValue);
+        for (Map.Entry<String, Double> current : response.getRates().entrySet()) {
+            if (RxConverterConstants.DEFAULT_CURRENCY.equals(current.getKey())) {
+                rxCurrencyList.add(0, new RxCurrency(current.getKey(), current.getValue()));
+            } else {
+                rxCurrencyList.add(new RxCurrency(current.getKey(), current.getValue() * baseCurrencyValue));
             }
         }
     }
@@ -58,7 +63,7 @@ public class RxConverterAdapter extends RecyclerView.Adapter<RxConverterAdapter.
 
             for (RxCurrency rxCurrency : rxCurrencyList) {
                 if (rxCurrency.getName().equals(name)) {
-                    rxCurrency.setValue(value);
+                    rxCurrency.setValue(value * baseCurrencyValue);
                     break;
                 }
             }
@@ -81,7 +86,7 @@ public class RxConverterAdapter extends RecyclerView.Adapter<RxConverterAdapter.
         if (currency != null) {
             holder.bindTo(currency);
             holder.itemView.setOnClickListener(v -> swapSelectedItemToTop(position));
-            //holder.editValue.setOnFocusChangeListener((v, hasFocus) -> focusValue(hasFocus, holder, position));
+            holder.editValue.setOnFocusChangeListener((v, hasFocus) -> focusValue(hasFocus, holder, position));
         }
     }
 
@@ -104,8 +109,8 @@ public class RxConverterAdapter extends RecyclerView.Adapter<RxConverterAdapter.
             viewHolder.rxEditValue = RxTextView.textChanges(viewHolder.editValue)
                     .skip(1)
                     .map(text -> text != null ? text : "")
-                    .map((CharSequence s) -> Double.parseDouble(s.toString()))
-                    .doOnNext(this::updateAllList)
+                    .map((CharSequence s) -> Double.parseDouble(s != null ? s.toString() : "0.00"))
+                    .doOnNext(value -> updateAllList(value, position))
                     .subscribe();
         } else {
             if (viewHolder.rxEditValue != null) {
@@ -114,22 +119,17 @@ public class RxConverterAdapter extends RecyclerView.Adapter<RxConverterAdapter.
                 InputMethodManager imm = (InputMethodManager) viewHolder.itemView.getContext().getSystemService(Activity.INPUT_METHOD_SERVICE);
                 if (imm != null)
                     imm.hideSoftInputFromWindow(viewHolder.editValue.getWindowToken(), 0);
+            } else {
+                viewHolder.editValue.getText().clear();
             }
         }
     }
 
-    private void updateAllList(Double newValue) {
-        for (RxCurrency rxCurrency : rxCurrencyList) {
-            rxCurrency.setValue(newValue * getValueByName(rxCurrency.getName()));
+    private void updateAllList(Double editedValue, int position) {
+        baseCurrencyValue = (editedValue >= 0 && editedValue <= 9999) ? editedValue / rxCurrencyList.get(position).getValue() : 0.00;
+        for (int i = 0; i < rxCurrencyList.size(); i++) {
+            rxCurrencyList.get(i).setValue(rxCurrencyList.get(i).getValue() * baseCurrencyValue);
         }
-    }
-
-    private Double getValueByName(String name) {
-        for (RxCurrency rxCurrency : rxCurrencyList) {
-            if (rxCurrency.getName().equals(name))
-                return rxCurrency.getValue();
-        }
-        return 0.00;
     }
 
     static class RxCurrencyViewHolder extends RecyclerView.ViewHolder {
@@ -146,7 +146,7 @@ public class RxConverterAdapter extends RecyclerView.Adapter<RxConverterAdapter.
 
         public void bindTo(RxCurrency currency) {
             currencyText.setText(currency.getName());
-            editValue.setText(String.valueOf(currency.getValue()));
+            editValue.setText(String.format("%.2f", currency.getValue()));
         }
     }
 }

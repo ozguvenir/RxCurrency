@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
                         .onErrorResumeNext(observer -> {
                         })
                         .doOnNext(currencies -> {
-                            adapter.creatOrUpdateCurrencyList(currencies);
+                            adapter.createOrUpdateCurrencyList(currencies);
                             recyclerView.setAdapter(adapter);
                         })
                         .doOnError(throwable -> {
